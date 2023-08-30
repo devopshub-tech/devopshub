@@ -1,0 +1,54 @@
+version: '3.7'
+
+services:
+  mongodb:
+    image: bitnami/mongodb:6.0.8
+    environment:
+      - MONGODB_ROOT_PASSWORD=devopshub
+      - MONGODB_USERNAME=devopshub
+      - MONGODB_PASSWORD=devopshub
+      - MONGODB_DATABASE=devopshubdb
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/bitnami/mongodb
+
+  rabbitmq:
+    image: bitnami/rabbitmq:3.12.3
+    environment:
+      - RABBITMQ_USERNAME=devopshub
+      - RABBITMQ_PASSWORD=devopshub
+      - RABBITMQ_SECURE_PASSWORD=no
+      - RABBITMQ_LOAD_DEFINITIONS=yes
+      - RABBITMQ_DEFINITIONS_FILE=/app/load_definition.json
+      - BITNAMI_DEBUG=true
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - ./deployments/config/rabbitmq-definitions.json:/app/load_definition.json:ro
+      - rabbitmq_data:/bitnami/rabbitmq
+
+  dind-container:
+    image: docker:24.0.5-dind
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - your-network
+
+  mongo-express:
+    image: mongo-express:1.0.0-alpha
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=devopshub
+    ports:
+      - '5000:8081'
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:

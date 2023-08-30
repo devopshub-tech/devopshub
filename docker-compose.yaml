@@ -1,0 +1,62 @@
+version: '3.7'
+
+services:
+  mongodb:
+    image: bitnami/mongodb:6.0.8
+    environment:
+      - MONGODB_ROOT_PASSWORD=devopshub
+      - MONGODB_USERNAME=devopshub
+      - MONGODB_PASSWORD=devopshub
+      - MONGODB_DATABASE=devopshubdb
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/bitnami/mongodb
+
+  rabbitmq:
+    image: bitnami/rabbitmq:3.12.3
+    environment:
+      - RABBITMQ_USERNAME=devopshub
+      - RABBITMQ_PASSWORD=devopshub
+      - RABBITMQ_SECURE_PASSWORD=no
+      - RABBITMQ_LOAD_DEFINITIONS=yes
+      - RABBITMQ_DEFINITIONS_FILE=/app/load_definition.json
+      - BITNAMI_DEBUG=true
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - ./deployments/config/rabbitmq-definitions.json:/app/load_definition.json:ro
+      - rabbitmq_data:/bitnami/rabbitmq
+
+  dind-container:
+    image: docker:20.10-dind
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - your-network
+
+  gateway:
+    image: devopshubtech/gateway-svc:latest
+    ports:
+      - '8080:8080'
+    environment:
+      - API_PORT=8080
+      - ENV_MODE=production
+      - DB_MONGO_URI=mongodb://devopshub:devopshub@mongodb:27017/devopshubdb?retryWrites=true&w=majority
+      - QUEUE_URI=amqp://devopshub:devopshub@rabbitmq:5672
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  worker:
+    image: devopshubtech/worker-svc:latest
+    environment:
+      - QUEUE_URI=amqp://devopshub:devopshub@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:

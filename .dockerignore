@@ -1,0 +1,39 @@
+# Ignore general files and folders
+.git
+.idea
+.vscode
+.DS_Store
+*.swp
+*.swo
+node_modules
+__pycache__
+
+# Ignore binaries and executables
+/bin/
+/out/
+/dist/
+/release/
+
+# Ignore specific Go files
+*.exe
+*.exe~
+*.test
+*.test~
+*.log
+*.prof
+
+# Ignore specific Go tools files
+/pprof
+/cover
+
+# Ignore backup and temporary files
+*~
+*.bak
+*.tmp
+*.temp
+
+# Ignore use deployments files
+cmd/gateway/Dockerfile
+cmd/worker/Dockerfile
+deployments/docker/master
+deployments/docker/worker
